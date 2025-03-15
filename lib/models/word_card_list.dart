@@ -16,5 +16,7 @@ enum SupportedLanguage {
 WordCardList demoCardList = WordCardList(SupportedLanguage.en, SupportedLanguage.et, [
   WordCard("Cat", "Kass"),
   WordCard("Dog", "Koer"),
-  WordCard("Student", "Tudeng")
+  WordCard("Student", "Tudeng"),
+  WordCard("Crocodile", "Крокодил"),
+  WordCard("Student", "Tudeng"),
 ]);
