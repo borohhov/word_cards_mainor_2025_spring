@@ -38,9 +38,9 @@ class _CardsPageState extends State<CardsPage> with SingleTickerProviderStateMix
   void getNextCard() {
     setState(() {
       // Choose a new index different from the current one.
-      int nextIndex = Random().nextInt(widget.cards.wordCards.length - 1);
+      int nextIndex = Random().nextInt(widget.cards.wordCards.length);
       while (cardIndex == nextIndex) {
-        nextIndex = Random().nextInt(widget.cards.wordCards.length - 1);
+        nextIndex = Random().nextInt(widget.cards.wordCards.length);
       }
       cardIndex = nextIndex;
     });

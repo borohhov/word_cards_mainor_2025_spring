@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card_list.dart';
+import 'package:word_cards_mainor_2025_spring/providers/word_card_list_provider.dart';
 
 class WordCardListForm extends StatefulWidget {
   const WordCardListForm({Key? key}) : super(key: key);
@@ -226,23 +228,7 @@ class _WordCardListFormState extends State<WordCardListForm> {
       _topicController.text.trim(),
       _wordCards,
     );
-
-    // Do what you need with newList (save it, upload it, etc.)
-    // For now, just show a dialog to confirm success:
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('List Created'),
-        content: Text('Topic: ${newList.topic} \n'
-            'From: ${newList.fromLanguage} to ${newList.toLanguage} \n'
-            'Word cards: ${newList.wordCards.length}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Ok'),
-          ),
-        ],
-      ),
-    );
+    Provider.of<WordCardListProvider>(context, listen: false).add(newList);
+    Navigator.of(context).pop();
   }
 }
