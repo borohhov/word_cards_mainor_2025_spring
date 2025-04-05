@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:word_cards_mainor_2025_spring/providers/word_card_list_provider.dart';
 import 'package:word_cards_mainor_2025_spring/views/home_page.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   runApp(ChangeNotifierProvider(
     create: (context) => WordCardListProvider(),
     child: const MyApp(),

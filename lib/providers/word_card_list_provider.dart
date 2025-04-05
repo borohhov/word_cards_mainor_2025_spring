@@ -1,26 +1,19 @@
 import 'dart:collection';
 
 import 'package:flutter/widgets.dart';
+import 'package:word_cards_mainor_2025_spring/controllers/persistence/persistence.dart';
+import 'package:word_cards_mainor_2025_spring/controllers/persistence/sql_controller.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card_list.dart';
 
 class WordCardListProvider extends ChangeNotifier {
-  final List<WordCardList> _items = [];
+  Persistence dataController = SqlController();
 
-  /// An unmodifiable view of the items in the cart.
-  UnmodifiableListView<WordCardList> get items => UnmodifiableListView(_items);
-
-
-  /// Adds [cardList] to cart. This and [removeAll] are the only ways to modify the
-  /// cart from the outside.
-  void add(WordCardList cardList) {
-    _items.add(cardList);
+  Future<void> addWordCardList(WordCardList cardList) async {
+    dataController.saveWordCardList(cardList);
     notifyListeners();
   }
 
-  /*/// Removes all items from the cart.
-  void removeAll() {
-    _items.clear();
-    // This call tells the widgets that are listening to this model to rebuild.
-    notifyListeners();
-  }*/
+  Future<List<WordCardList>> getWordCardLists() async {
+    return dataController.getAllWordCardLists();
+  }
 }

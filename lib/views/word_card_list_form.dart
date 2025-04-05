@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card_list.dart';
 import 'package:word_cards_mainor_2025_spring/providers/word_card_list_provider.dart';
+import 'package:word_cards_mainor_2025_spring/services/openai_wordcard.dart';
 
 class WordCardListForm extends StatefulWidget {
   const WordCardListForm({Key? key}) : super(key: key);
@@ -12,7 +13,6 @@ class WordCardListForm extends StatefulWidget {
 }
 
 class _WordCardListFormState extends State<WordCardListForm> {
-  // Form key to validate and save form data
   final _formKey = GlobalKey<FormState>();
 
   // Fields for the WordCardList
@@ -20,12 +20,15 @@ class _WordCardListFormState extends State<WordCardListForm> {
   SupportedLanguage? _toLanguage;
   final TextEditingController _topicController = TextEditingController();
 
-  // List of word cards to create
+  // List of word cards (in memory)
   List<WordCard> _wordCards = [];
 
-  // Controllers for each new WordCard row (we store them in a list for convenience)
+  // Controllers for each WordCard row
   final List<TextEditingController> _wordControllers = [];
   final List<TextEditingController> _translatedWordControllers = [];
+
+  // Future for generated cards (if any)
+  Future<WordCardList>? _generatedListFuture;
 
   @override
   Widget build(BuildContext context) {
@@ -109,10 +112,10 @@ class _WordCardListFormState extends State<WordCardListForm> {
               ),
               const SizedBox(height: 24),
 
-              // WordCard inputs (dynamically added)
-              ..._buildWordCardFields(),
+              // Word card fields using FutureBuilder to avoid flaky behaviour
+              _buildWordCardsSection(),
 
-              // Button to add another word card row
+              // Button to add another word card row manually
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
@@ -128,11 +131,51 @@ class _WordCardListFormState extends State<WordCardListForm> {
                 onPressed: _submitForm,
                 child: const Text('Save Card List'),
               ),
+              const SizedBox(height: 16),
+
+              // Generate cards button
+              ElevatedButton(
+                onPressed: _generateCards,
+                child: const Text('Generate Cards'),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// This method builds the word cards section.
+  /// If a generation future is active, it uses FutureBuilder to wait for the cards;
+  /// otherwise it displays the current text fields.
+  Widget _buildWordCardsSection() {
+    if (_generatedListFuture != null) {
+      return FutureBuilder<WordCardList>(
+        future: _generatedListFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (snapshot.hasData) {
+            // Populate controllers if not already done
+            if (_wordControllers.isEmpty && _translatedWordControllers.isEmpty) {
+              _wordControllers.clear();
+              _translatedWordControllers.clear();
+              _wordCards = snapshot.data!.wordCards;
+              for (final card in _wordCards) {
+                _wordControllers.add(TextEditingController(text: card.word));
+                _translatedWordControllers.add(TextEditingController(text: card.translatedWord));
+              }
+            }
+            return Column(children: _buildWordCardFields());
+          }
+          return Container();
+        },
+      );
+    } else {
+      return Column(children: _buildWordCardFields());
+    }
   }
 
   List<Widget> _buildWordCardFields() {
@@ -152,9 +195,7 @@ class _WordCardListFormState extends State<WordCardListForm> {
               Expanded(
                 child: TextFormField(
                   controller: _wordControllers[i],
-                  decoration: const InputDecoration(
-                    labelText: 'Word',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Word'),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Enter a word';
@@ -168,9 +209,7 @@ class _WordCardListFormState extends State<WordCardListForm> {
               Expanded(
                 child: TextFormField(
                   controller: _translatedWordControllers[i],
-                  decoration: const InputDecoration(
-                    labelText: 'Translation',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Translation'),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Enter a translation';
@@ -205,13 +244,13 @@ class _WordCardListFormState extends State<WordCardListForm> {
     });
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
-      // If any fields are invalid, the form won't submit
+      // If any fields are invalid, don't submit
       return;
     }
 
-    // Construct the list of WordCards
+    // Re-construct the list of WordCards from the text controllers
     _wordCards.clear();
     for (int i = 0; i < _wordControllers.length; i++) {
       _wordCards.add(
@@ -228,7 +267,29 @@ class _WordCardListFormState extends State<WordCardListForm> {
       _topicController.text.trim(),
       _wordCards,
     );
-    Provider.of<WordCardListProvider>(context, listen: false).add(newList);
+
+    // Add to Provider and pop back to previous screen
+    await Provider.of<WordCardListProvider>(context, listen: false)
+        .addWordCardList(newList);
     Navigator.of(context).pop();
+  }
+
+  /// Calls the OpenAI API to generate cards and sets the future,
+  /// triggering the FutureBuilder to rebuild.
+  void _generateCards() {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      // This future will be used by the FutureBuilder to show progress and result.
+      _generatedListFuture = generateWordCardList(
+        _topicController.text.trim(),
+        _fromLanguage!,
+        _toLanguage!,
+      );
+      // Clear any existing controllers so that they are replaced by the generated ones.
+      _wordControllers.clear();
+      _translatedWordControllers.clear();
+    });
   }
 }

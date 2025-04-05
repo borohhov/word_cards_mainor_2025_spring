@@ -11,7 +11,6 @@ class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,20 +18,31 @@ class HomePage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: Provider.of<WordCardListProvider>(context)
-                .items
-                .map(
-                  (cardList) => GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => CardsPage(cards: cardList)),
-                        );
-                      },
-                      child: WordCardListWidget(wordCardList: cardList)),
-                )
-                .toList(),
+          child: FutureBuilder<List<WordCardList>>(
+            future: Provider.of<WordCardListProvider>(context).getWordCardLists(),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator(),);
+              }
+              if (snapshot.hasData) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children:
+                  snapshot.data.map<Widget>(
+                        (cardList) =>
+                        GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (context) => CardsPage(cards: cardList)),
+                              );
+                            },
+                            child: WordCardListWidget(wordCardList: cardList)),
+                  )
+                      .toList(),
+                );
+              }
+              return Center(child: Text('An error occurred'),);
+            },
           ),
         ),
       ),
