@@ -4,9 +4,9 @@ import 'package:sqflite/sqflite.dart';
 
 import 'package:word_cards_mainor_2025_spring/models/word_card.dart';
 import 'package:word_cards_mainor_2025_spring/models/word_card_list.dart';
-import 'persistence.dart'; // Where you defined Persistence
+import 'persistence.dart';
 
-class SqlController implements Persistence {
+class SqlController implements PersistenceInterface {
   Database? _database;
 
   /// Initialize the database, creating tables if they don’t exist.

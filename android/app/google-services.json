@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "319019961476",
+    "project_id": "word-cards-mainor-2025-spring",
+    "storage_bucket": "word-cards-mainor-2025-spring.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:319019961476:android:fe826256e3a99117eb86d1",
+        "android_client_info": {
+          "package_name": "com.mainor.word_cards.word_cards_mainor_2025_spring"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_2ZBffoJfOW_qpZ4G1vov_L3b0UTpSs8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
