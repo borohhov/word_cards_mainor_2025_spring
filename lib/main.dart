@@ -1,38 +1,33 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide EmailAuthProvider;
+import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:word_cards_mainor_2025_spring/controllers/auth/firebase_auth.dart';
-import 'package:word_cards_mainor_2025_spring/providers/word_card_list_provider.dart';
-import 'package:word_cards_mainor_2025_spring/views/home_page.dart';
-
-import 'controllers/auth/auth.dart';
 import 'firebase_options.dart';
-
-void main() async {
-  await dotenv.load(fileName: ".env");
+import 'views/connectivity_banner.dart';
+import 'views/home_page.dart';
+import 'providers/word_card_list_provider.dart';   // <-- ADD THIS
+Future<void> main() async {
+  await dotenv.load(fileName: '.env');
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  Auth auth = FirebaseAuthImpl();
+  // Tell Firebase UI which auth flows you want.
+  FirebaseUIAuth.configureProviders([
+    EmailAuthProvider(),          // <-- email + password
+    // GoogleProvider(clientId: ‘…’),  // add more when you need them
+  ]);
 
-  // listen to auth state
-  auth.authStateChanges.listen((user) {
-    if (user != null) {
-      print('Signed in anonymously as ${user.uid}');
-    } else {
-      print('Signed out');
-    }
-  });
-
-  // sign in
-  await auth.signInAnonymously();
-  runApp(ChangeNotifierProvider(
-    create: (context) => WordCardListProvider(),
-    child: const MyApp(),
-  ),);
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => WordCardListProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -46,7 +41,30 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      // StreamBuilder decides whether to show the sign-in UI or your app.
+      home: ConnectivityBanner(child:  AuthGate()),
+    );
+  }
+}
+
+/// Shows [SignInScreen] until the user is authenticated.
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          // Not signed in → present the pre-built email/password screen.
+          return SignInScreen(
+            providers: [EmailAuthProvider()],
+          );
+        }
+        // Signed in → continue to your real UI.
+        return const HomePage();
+      },
     );
   }
 }

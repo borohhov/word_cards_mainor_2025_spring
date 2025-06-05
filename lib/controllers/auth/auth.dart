@@ -10,6 +10,8 @@ abstract class Auth {
   /// Signs in anonymously and returns the signed‐in [User].
   Future<User?> signInAnonymously();
 
+  Future<User?> signInWithEmailAndPassword(String email, String Password);
+
   /// Signs out the current user.
   Future<void> signOut();
 }

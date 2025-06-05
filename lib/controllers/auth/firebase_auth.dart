@@ -19,5 +19,11 @@ class FirebaseAuthImpl implements Auth {
   }
 
   @override
+  Future<User?> signInWithEmailAndPassword(String email, String password) async {
+    UserCredential cred = await _firebase.signInWithEmailAndPassword(email: email, password: password);
+    return cred.user;
+  }
+
+  @override
   Future<void> signOut() => _firebase.signOut();
 }

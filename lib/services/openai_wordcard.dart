@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
@@ -121,4 +122,39 @@ SupportedLanguage _mapLanguageStringToEnum(String? languageString) {
     default:
       throw ArgumentError("Unsupported language string: $languageString");
   }
+}
+
+Future<WordCardList> fetchWordCardsHttp(
+    String topic,
+    SupportedLanguage fromLang,
+    SupportedLanguage toLang,
+    ) async {
+  // 1. Your deployed region & project
+  final uri = Uri.https(
+    'generatewordcardlist-2x5kbnvtqq-uc.a.run.app',
+  );
+
+  // 2. (Optional) attach Firebase ID token to match the server-side check
+  final idToken = await FirebaseAuth.instance.currentUser?.getIdToken();
+  final headers = {
+    'Content-Type': 'application/json',
+    if (idToken != null) 'Authorization': 'Bearer $idToken',
+  };
+
+  // 3. POST the request body
+  final response = await http.post(
+    uri,
+    headers: headers,
+    body: jsonEncode({
+      'topic': topic,
+      'fromLanguage': fromLang.name,  // "en", "et", …
+      'toLanguage': toLang.name,
+    }),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('API error: ${response.body}');
+  }
+
+  return WordCardList.fromJson(jsonDecode(response.body));
 }

@@ -282,7 +282,7 @@ class _WordCardListFormState extends State<WordCardListForm> {
     }
     setState(() {
       // This future will be used by the FutureBuilder to show progress and result.
-      _generatedListFuture = generateWordCardList(
+      _generatedListFuture = fetchWordCardsHttp(
         _topicController.text.trim(),
         _fromLanguage!,
         _toLanguage!,
